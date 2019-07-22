@@ -3,8 +3,6 @@
 const tts = require('@google-cloud/text-to-speech');
 const stt = require('@google-cloud/speech');
 const portAudio = require('naudiodon');
-const Readable = require('stream').Readable;
-const fs = require('fs');
 const iohook = require('iohook');
 
 process.env.GOOGLE_APPLICATION_CREDENTIALS = './gApiCredentials.json';
@@ -105,18 +103,11 @@ function start() {
     const text = data.toString().trim();
     if (text.length > 0) toSpeech(text);
   });
-
-  fs.readFile('./startup.wav', (err, data) => {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    output.write(data);
-  });
   input.start();
   output.start();
 
   iohook.on('keydown', (data) => {
+    // Alt + NumPadPlus
     if (data.altKey && data.keycode === 78 && !data.shiftKey && !data.ctrlKey &&
         !data.metaKey) {
       trigger();
