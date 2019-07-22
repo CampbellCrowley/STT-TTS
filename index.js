@@ -4,6 +4,7 @@ const tts = require('@google-cloud/text-to-speech');
 const stt = require('@google-cloud/speech');
 const portAudio = require('naudiodon');
 const iohook = require('iohook');
+const fs = require('fs');
 
 process.env.GOOGLE_APPLICATION_CREDENTIALS = './gApiCredentials.json';
 // Audio device ID.
@@ -37,14 +38,19 @@ const output = new portAudio.AudioIO({
 
 const ttsRequest = {
   input: {text: 'Hello World'},
-  voice: {languageCode: 'en-US', ssmlGender: 'MALE'},
+  voice: {
+    languageCode: 'en-US',
+    ssmlGender: 'MALE',
+    name: 'en-US-Wavenet-D',
+  },
   audioConfig: {
     audioEncoding: 'LINEAR16',
     sampleRateHertz: sampleRate,
-    pitch: 2,
-    speakingRate: 1.5,
+    pitch: 1,
+    speakingRate: 1.25,
   },
 };
+const cacheDir = `./cache/${ttsRequest.voice.name}/`;
 const sttRequest = {
   audio: {content: null},
   config: {
@@ -60,6 +66,20 @@ const ttsClient = new tts.TextToSpeechClient();
 const sttClient = new stt.SpeechClient();
 
 function toSpeech(text) {
+  const filename = `${cacheDir}${encodeURIComponent(text)}.wav`;
+  if (fs.existsSync(filename)) {
+    console.log('CACHE HIT :', text);
+    fs.readFile(filename, (err, data) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      output.write(data);
+    });
+    return;
+  }
+  console.log('CACHE MISS:', text);
+
   const req = ttsRequest;
   req.input.text = text;
   ttsClient.synthesizeSpeech(req, (err, res) => {
@@ -68,6 +88,9 @@ function toSpeech(text) {
       return;
     }
     output.write(res.audioContent);
+    fs.writeFile(filename, res.audioContent, (err) => {
+      if (err) console.error(err);
+    });
   });
 }
 
@@ -86,7 +109,6 @@ function trigger() {
       return;
     }
     const text = res.results.map((el) => el.alternatives[0].transcript).join('\n');
-    console.log(text);
     if (text.length > 1) toSpeech(text);
   });
 }
@@ -116,4 +138,11 @@ function start() {
   iohook.start();
 }
 
+function setup() {
+  fs.mkdir(cacheDir, {recursive: true}, (err) => {
+    if (err && err.code !== 'EEXIST') throw err;
+  });
+}
+
+setup();
 start();
