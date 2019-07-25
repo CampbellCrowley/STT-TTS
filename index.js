@@ -7,8 +7,10 @@ const iohook = require('iohook');
 const fs = require('fs');
 
 process.env.GOOGLE_APPLICATION_CREDENTIALS = './gApiCredentials.json';
-// Audio device ID.
-const id = -1;
+// Output Audio device ID.
+const oId = -1;
+// Input Audio device ID.
+const iId = -1;
 
 const sampleRate = 44100;
 const sampleFormat = portAudio.SampleFormat16Bit;
@@ -22,7 +24,7 @@ const input = new portAudio.AudioIO({
     channelCount: 1,
     sampleFormat: sampleFormat,
     sampleRate: sampleRate,
-    deviceId: id,
+    deviceId: iId,
     highwaterMark:
         Math.ceil(sampleRate * sampleFormat / 8 * (deltaSample / 1000)),
   },
@@ -32,7 +34,7 @@ const output = new portAudio.AudioIO({
     channelCount: 1,
     sampleFormat: sampleFormat,
     sampleRate: sampleRate,
-    deviceId: -1,
+    deviceId: oId,
   },
 });
 
@@ -46,8 +48,8 @@ const ttsRequest = {
   audioConfig: {
     audioEncoding: 'LINEAR16',
     sampleRateHertz: sampleRate,
-    pitch: 1,
-    speakingRate: 1.25,
+    pitch: 0,
+    speakingRate: 1.0,
   },
 };
 const cacheDir = `./cache/${ttsRequest.voice.name}/`;
