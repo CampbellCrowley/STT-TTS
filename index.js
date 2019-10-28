@@ -45,9 +45,9 @@ let input;
 // Setup the audio input device.
 function setupInput() {
   // ID of the audio device to use.
-  const iId = portAudio.getDevices()
-                .find((el) => el.name.indexOf('CABLE Output') > -1)
-                .id;
+  const iId = (portAudio.getDevices().find(
+                   (el) => el.name.indexOf('CABLE Output') > -1) ||
+               {id: -1}).id;
   input = new portAudio.AudioIO({
     inOptions: {
       channelCount: 1,
@@ -67,9 +67,9 @@ let output;
 // Setup the audio output device.
 function setupOutput() {
   // ID of the output device.
-  const oId = portAudio.getDevices()
-                .find((el) => el.name.indexOf('VoiceMeeter VAIO3 Input') > -1)
-                .id;
+  const oId = (portAudio.getDevices().find(
+                   (el) => el.name.indexOf('VoiceMeeter VAIO3 Input') > -1) ||
+               {id: -1}).id;
   output = new portAudio.AudioIO({
     outOptions: {
       channelCount: 1,
